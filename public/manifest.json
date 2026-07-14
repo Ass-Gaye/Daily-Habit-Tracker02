@@ -1,0 +1,24 @@
+{
+  "short_name": "Habit Tracker",
+  "name": "Weekly Habit Tracker",
+  "description": "A modern weekly habit tracker to build professional discipline, elevate productivity, and track progress.",
+  "icons": [
+    {
+      "src": "/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#020617",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "portrait"
+}

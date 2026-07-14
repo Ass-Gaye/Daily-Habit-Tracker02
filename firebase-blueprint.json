@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "Habit": {
+      "title": "Habit",
+      "description": "A habit that can be tracked weekly",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 100 },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 500 },
+        "whyItMatters": { "type": "string", "maxLength": 500 },
+        "benefits": { "type": "string", "maxLength": 500 },
+        "category": { "type": "string", "maxLength": 50 },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["id", "name", "category", "createdBy"]
+    },
+    "User": {
+      "title": "User Profile",
+      "description": "User profile with streak and achievements statistics",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 100 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "currentStreak": { "type": "number" },
+        "longestStreak": { "type": "number" },
+        "lastActiveDate": { "type": "string", "maxLength": 10 },
+        "achievements": { "type": "array" },
+        "weeklyGoal": { "type": "number" },
+        "createdAt": { "type": "string", "maxLength": 100 },
+        "isAdmin": { "type": "boolean" }
+      },
+      "required": ["uid", "currentStreak", "longestStreak", "achievements", "weeklyGoal"]
+    },
+    "WeeklyProgress": {
+      "title": "Weekly Progress",
+      "description": "The completion status and notes for a week",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 10 },
+        "completions": { "type": "object" },
+        "notes": { "type": "object" },
+        "updatedAt": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["id", "completions", "notes"]
+    }
+  },
+  "firestore": {
+    "habits/{habitId}": {
+      "schema": { "$ref": "#/entities/Habit" },
+      "description": "Global collection of habits, editable by admins"
+    },
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile information"
+    },
+    "users/{userId}/progress/{weekId}": {
+      "schema": { "$ref": "#/entities/WeeklyProgress" },
+      "description": "Weekly progress details including habit completions and notes"
+    }
+  }
+}

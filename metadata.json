@@ -1,0 +1,6 @@
+{
+  "name": "Weekly Habit Tracker",
+  "description": "A modern weekly habit tracker with achievements, analytics, and professional goal tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
