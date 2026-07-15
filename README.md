@@ -58,6 +58,13 @@ The app is built around a cohesive, high-contrast visual design that adapts effo
 ### 7. Administrative Customization Panel
 *   **Admin Mode Toggle**: Safe local development/sandbox review mode enabling users to add, update, or remove pre-configured habits directly from the interface.
 
+### 8. Progressive Web App (PWA) & Native Device Installation
+*   **Fully Downloadable Application**: Install the Weekly Habit Tracker as a native, lightweight app directly to your desktop, Android device, or iOS Home Screen.
+*   **Device Context Detection**: Intelligently identifies if the application is running inside a cloud sandboxed iframe, providing seamless redirection buttons to open the applet in a full, standalone tab ready for installation.
+*   **Interactive Installation Hub Modal**: Step-by-step instructions customized for multiple environments (Chrome, Edge, Brave, and Safari on iOS/Android).
+*   **Service Worker Asset Caching**: A native service worker (`sw.js`) intercepts static requests, caching shell assets (styles, layouts, SVG glyphs, font layers) to enable near-instantaneous offline-first load states.
+*   **Maskable Responsive App Icons**: Compliant high-definition icon sets (`192x192` and `512x512` configurations) configured inside the web application manifest (`manifest.json`) supporting responsive maskable styling shapes on both Android and iOS devices.
+
 ---
 
 ## 🛠️ Architecture & Technology Stack
@@ -83,7 +90,7 @@ The app is built around a cohesive, high-contrast visual design that adapts effo
 *   **Build System**: Vite (configured for quick compilation and seamless rendering in iframe).
 *   **Styling**: Utility-first **Tailwind CSS** with responsive desktop-first styling grid layouts.
 *   **Animations**: Staggered list entrances, side panels, and modal backdrops driven by **Framer Motion** (`motion/react`).
-*   **State & Database**: Secure real-time bindings to **Firebase Firestore** and persistent local authentication storage.
+*   **State & Database**: Secure real-time bindings to **Firebase Firestore** with persistent local authentication. Built with robust **long-polling network transport configuration** (`experimentalForceLongPolling: true`) to bypass restrictive proxies and firewall filters, ensuring continuous offline fallback and database resilience.
 *   **Lint & Build Validation**: Verified TypeScript compilation with `tsc --noEmit`.
 
 ---

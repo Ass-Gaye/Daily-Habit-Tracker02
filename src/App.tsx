@@ -33,7 +33,10 @@ import {
   Award,
   BookMarked,
   Sun,
-  Moon
+  Moon,
+  Download,
+  Smartphone,
+  Monitor
 } from 'lucide-react';
 
 import { auth, db } from './lib/firebase';
@@ -94,6 +97,13 @@ export default function App() {
   // Google Login Iframe/Popup helper modal
   const [showLoginHelp, setShowLoginHelp] = useState(false);
 
+  // Progressive Web App (PWA) Install States
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isPwaInstallable, setIsPwaInstallable] = useState(false);
+  const [isPwaInstalled, setIsPwaInstalled] = useState(false);
+  const [isIframe, setIsIframe] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+
   // Dark Mode Toggle
   const handleToggleDarkMode = async () => {
     if (!profile) return;
@@ -114,6 +124,50 @@ export default function App() {
 
   // Debouncing for auto-saving notes
   const saveNoteTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Progressive Web App (PWA) Environment Detection & Event Registration
+  useEffect(() => {
+    setIsIframe(window.self !== window.top);
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+    setIsPwaInstalled(isStandalone);
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsPwaInstallable(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    const handleAppInstalled = () => {
+      setIsPwaInstalled(true);
+      setIsPwaInstallable(false);
+      setDeferredPrompt(null);
+      showToastMessage("🎉 Awesome! Weekly Habit Tracker has been installed as a native Web App.");
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) {
+      setShowInstallGuide(true);
+      return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      showToastMessage("🚀 Thank you for installing our Web App!");
+    }
+    setDeferredPrompt(null);
+    setIsPwaInstallable(false);
+  };
 
   // 1. Initial Authentication & Auto Anonymous Login
   useEffect(() => {
@@ -607,6 +661,84 @@ export default function App() {
             </strong>
           </span>
         </div>
+
+        {/* PWA / Native Web App Installer Prompt Banner */}
+        <AnimatePresence>
+          {!isPwaInstalled && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className={`p-5 rounded-2xl border transition-all duration-300 shadow-sm ${
+                profile?.darkMode 
+                  ? 'bg-slate-900 border-slate-800 text-slate-100' 
+                  : 'bg-white border-slate-200 text-slate-800 shadow-xs'
+              }`}
+            >
+              {isIframe ? (
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded-xl">
+                      <Smartphone className="w-6 h-6 animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
+                        📱 Download Weekly Habit Tracker as an App
+                      </h3>
+                      <p className={`text-xs mt-0.5 ${profile?.darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        You are viewing inside a secure workspace iframe. Open the app in a new tab to add it directly to your home screen!
+                      </p>
+                    </div>
+                  </div>
+                  <a
+                    href={window.location.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-indigo-950 font-bold font-sans rounded-xl text-xs transition-all cursor-pointer shadow-sm flex items-center gap-2 shrink-0"
+                  >
+                    <Download className="w-4 h-4" />
+                    Open & Install App
+                  </a>
+                </div>
+              ) : (
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl">
+                      <Download className="w-6 h-6 animate-bounce" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm tracking-tight flex items-center gap-1.5">
+                        ✨ Install Habit Tracker on your Device
+                      </h3>
+                      <p className={`text-xs mt-0.5 ${profile?.darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                        Enjoy offline routine writing, instant access, full screen layout, and robust automatic profile synchronization.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => setShowInstallGuide(true)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                        profile?.darkMode 
+                          ? 'bg-slate-950 border-slate-800 text-slate-300 hover:bg-slate-900' 
+                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      Installation Guide
+                    </button>
+                    <button
+                      onClick={handleInstallApp}
+                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-indigo-950 font-bold font-sans rounded-xl text-xs transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      Install Now
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Outer Grid: Layout is organized with key stats up top, core table below */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -1241,6 +1373,86 @@ export default function App() {
                   className="px-4 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-indigo-950 font-bold font-sans rounded-xl text-xs transition-colors cursor-pointer shadow-sm"
                 >
                   Understood, close
+                </button>
+              </div>
+
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* PWA / Web App Step-by-Step Installation Guide Modal */}
+      <AnimatePresence>
+        {showInstallGuide && (
+          <motion.div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div 
+              className={`w-full max-w-xl p-6 rounded-2xl border shadow-2xl relative space-y-4 ${
+                profile?.darkMode 
+                  ? 'bg-slate-900 border-slate-800 text-slate-100' 
+                  : 'bg-white border-slate-200 text-slate-800'
+              }`}
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+            >
+              <button 
+                onClick={() => setShowInstallGuide(false)}
+                className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/10 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-start gap-3">
+                <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 rounded-xl">
+                  <Smartphone className="w-6 h-6 animate-bounce" />
+                </div>
+                <div>
+                  <h3 className={`text-lg font-bold font-sans ${profile?.darkMode ? 'text-emerald-400' : 'text-indigo-900'}`}>
+                    Web App Installation Hub
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Quick setup guidelines for desktop & mobile devices</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Desktop Guide */}
+                <div className={`p-4 rounded-xl border ${profile?.darkMode ? 'bg-slate-950 border-slate-850' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Monitor className="w-4 h-4 text-amber-500" />
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-slate-300">Chrome, Edge & Brave</h4>
+                  </div>
+                  <ol className="text-xs space-y-2 text-slate-400 leading-relaxed list-decimal list-inside pl-1">
+                    <li>Look at the right side of your browser's address bar (URL bar).</li>
+                    <li>Click the <strong className={profile?.darkMode ? 'text-slate-200' : 'text-slate-700'}>"Install app"</strong> icon (a computer icon with a down arrow).</li>
+                    <li>Confirm and click <strong className={profile?.darkMode ? 'text-slate-200' : 'text-slate-700'}>"Install"</strong> to launch the native app context.</li>
+                  </ol>
+                </div>
+
+                {/* Mobile Guide */}
+                <div className={`p-4 rounded-xl border ${profile?.darkMode ? 'bg-slate-950 border-slate-850' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Smartphone className="w-4 h-4 text-amber-500" />
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-slate-300">Safari on iOS (Apple)</h4>
+                  </div>
+                  <ol className="text-xs space-y-2 text-slate-400 leading-relaxed list-decimal list-inside pl-1">
+                    <li>Tap the <strong className={profile?.darkMode ? 'text-slate-200' : 'text-slate-700'}>"Share"</strong> icon (square with an up-arrow) at the bottom.</li>
+                    <li>Scroll down and tap <strong className={profile?.darkMode ? 'text-slate-200' : 'text-slate-700'}>"Add to Home Screen"</strong>.</li>
+                    <li>Tap <strong className={profile?.darkMode ? 'text-slate-200' : 'text-slate-700'}>"Add"</strong> in the top-right. The beautiful 3D icon will appear on your home screen!</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end gap-2 border-t border-slate-800/10">
+                <button
+                  onClick={() => setShowInstallGuide(false)}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-indigo-950 font-bold font-sans rounded-xl text-xs transition-colors cursor-pointer shadow-sm"
+                >
+                  Understood, let's build routine!
                 </button>
               </div>
 
